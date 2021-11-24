@@ -2,6 +2,7 @@ package consul
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"time"
@@ -49,6 +50,7 @@ func watchConsulService(ctx context.Context, s servicer, tgt target, out chan<- 
 	go func() {
 		var lastIndex uint64
 		for {
+			grpclog.Infof("[Consul resolver] watchConsulService. target={%s}", tgt.String())
 			ss, meta, err := s.Service(
 				tgt.Service,
 				tgt.Tag,
@@ -63,16 +65,18 @@ func watchConsulService(ctx context.Context, s servicer, tgt target, out chan<- 
 				},
 			)
 			if err != nil {
-				grpclog.Errorf("[Consul resolver] Couldn't fetch endpoints. target={%s}; error={%v}", tgt.String(), err)
+				_tgt, _ := json.Marshal(tgt)
+				grpclog.Errorf("[Consul resolver] Couldn't fetch endpoints. target={%s}; error={%v}", string(_tgt), err)
 				time.Sleep(bck.Duration())
 				continue
 			}
 			bck.Reset()
 			lastIndex = meta.LastIndex
+			_tgt, _ := json.Marshal(tgt)
 			grpclog.Infof("[Consul resolver] %d endpoints fetched in(+wait) %s for target={%s}",
 				len(ss),
 				meta.RequestTime,
-				tgt.String(),
+				string(_tgt),
 			)
 
 			ee := make([]string, 0, len(ss))

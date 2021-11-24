@@ -1,7 +1,9 @@
 package consul
 
 import (
+	"encoding/json"
 	"fmt"
+	"google.golang.org/grpc/grpclog"
 	"net/http"
 	"net/url"
 	"strings"
@@ -34,7 +36,7 @@ type target struct {
 }
 
 func (t *target) String() string {
-	return fmt.Sprintf("service='%s' healthy='%t' tag='%s'", t.Service, t.Healthy, t.Tag)
+	return fmt.Sprintf("service='%s' healthy='%t' tag='%s' dc='%s'", t.Service, t.Healthy, t.Tag, t.Dc)
 }
 
 //  parseURL with parameters
@@ -72,6 +74,8 @@ func parseURL(u string) (target, error) {
 	if tgt.MaxBackoff == 0 {
 		tgt.MaxBackoff = time.Second
 	}
+	_tgt, _ := json.Marshal(tgt)
+	grpclog.Infof("[Consul resolver] parsed url %v", string(_tgt))
 	return tgt, nil
 }
 
