@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/hashicorp/consul/api"
 	"github.com/pkg/errors"
-	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/resolver"
 )
 
@@ -17,9 +16,7 @@ type builder struct{}
 
 func (b *builder) Build(url resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
 	dsn := url.URL.String()
-	grpclog.Infof("[Consul resolver] resolver builder. dsn={%s}", dsn)
 	tgt, err := parseURL(dsn)
-	grpclog.Infof("[Consul resolver] resolver builder. tgt={%s}", tgt.String())
 	if err != nil {
 		return nil, errors.Wrap(err, "Wrong consul URL")
 	}

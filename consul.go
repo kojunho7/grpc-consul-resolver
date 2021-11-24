@@ -2,7 +2,6 @@ package consul
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"sort"
 	"time"
@@ -39,7 +38,6 @@ type servicer interface {
 }
 
 func watchConsulService(ctx context.Context, url resolver.Target, s servicer, tgt target, out chan<- []string) {
-	grpclog.Infof("[Consul resolver] watchConsulService. url={%s}", url)
 	res := make(chan []string)
 	quit := make(chan struct{})
 	bck := &backoff.Backoff{
@@ -51,7 +49,7 @@ func watchConsulService(ctx context.Context, url resolver.Target, s servicer, tg
 	go func() {
 		var lastIndex uint64
 		for {
-			grpclog.Infof("[Consul resolver] watchConsulService. target={%s}", tgt.String())
+			grpclog.Infof("[Consul resolver] watchConsulService. url={%s}, target={%s}", url, tgt.String())
 			ss, meta, err := s.Service(
 				tgt.Service,
 				tgt.Tag,
@@ -66,18 +64,16 @@ func watchConsulService(ctx context.Context, url resolver.Target, s servicer, tg
 				},
 			)
 			if err != nil {
-				_tgt, _ := json.Marshal(tgt)
-				grpclog.Errorf("[Consul resolver] Couldn't fetch endpoints. target={%s}; error={%v}", string(_tgt), err)
+				grpclog.Errorf("[Consul resolver] Couldn't fetch endpoints. target={%s}; error={%v}", tgt.String(), err)
 				time.Sleep(bck.Duration())
 				continue
 			}
 			bck.Reset()
 			lastIndex = meta.LastIndex
-			_tgt, _ := json.Marshal(tgt)
 			grpclog.Infof("[Consul resolver] %d endpoints fetched in(+wait) %s for target={%s}",
 				len(ss),
 				meta.RequestTime,
-				string(_tgt),
+				tgt.String(),
 			)
 
 			ee := make([]string, 0, len(ss))
