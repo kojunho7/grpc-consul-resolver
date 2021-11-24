@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"google.golang.org/grpc/grpclog"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -75,6 +76,7 @@ func parseURL(u string) (target, error) {
 		tgt.MaxBackoff = time.Second
 	}
 	_tgt, _ := json.Marshal(tgt)
+	log.Println("[Consul resolver] parsed url", string(_tgt))
 	grpclog.Infof("[Consul resolver] parsed url %v", string(_tgt))
 	return tgt, nil
 }
