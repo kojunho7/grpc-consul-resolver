@@ -38,7 +38,8 @@ type servicer interface {
 	Service(string, string, bool, *api.QueryOptions) ([]*api.ServiceEntry, *api.QueryMeta, error)
 }
 
-func watchConsulService(ctx context.Context, s servicer, tgt target, out chan<- []string) {
+func watchConsulService(ctx context.Context, url resolver.Target, s servicer, tgt target, out chan<- []string) {
+	grpclog.Infof("[Consul resolver] watchConsulService. url={%s}", url)
 	res := make(chan []string)
 	quit := make(chan struct{})
 	bck := &backoff.Backoff{

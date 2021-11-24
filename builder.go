@@ -19,9 +19,9 @@ type builder struct{}
 
 func (b *builder) Build(url resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
 	dsn := strings.Join([]string{schemeName + ":/", url.Authority, url.Endpoint}, "/")
-	grpclog.Infof("[Consul resolver] resolver builder. dsn=%v", dsn)
+	grpclog.Infof("[Consul resolver] resolver builder. dsn={%s}", dsn)
 	tgt, err := parseURL(dsn)
-	grpclog.Infof("[Consul resolver] resolver builder. tgt=%v", tgt.String())
+	grpclog.Infof("[Consul resolver] resolver builder. tgt={%s}", tgt.String())
 	if err != nil {
 		return nil, errors.Wrap(err, "Wrong consul URL")
 	}
@@ -32,7 +32,7 @@ func (b *builder) Build(url resolver.Target, cc resolver.ClientConn, opts resolv
 
 	ctx, cancel := context.WithCancel(context.Background())
 	pipe := make(chan []string)
-	go watchConsulService(ctx, cli.Health(), tgt, pipe)
+	go watchConsulService(ctx, url, cli.Health(), tgt, pipe)
 	go populateEndpoints(ctx, cc, pipe)
 
 	return &resolvr{cancelFunc: cancel}, nil
